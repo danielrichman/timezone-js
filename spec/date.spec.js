@@ -75,7 +75,7 @@ describe('timezoneJS.Date', function () {
     var dtA = new Date()
       , dt = new timezoneJS.Date();
 
-    dtA.setTime(dtA.getTime());
+    dt.setTime(dtA.getTime());
     expect(dt.getTime()).toEqual(dtA.getTime());
     expect(dt.toISOString()).toEqual(dtA.toISOString());
   });
@@ -84,7 +84,7 @@ describe('timezoneJS.Date', function () {
     var dtA = new Date()
       , dt = new timezoneJS.Date();
 
-    dtA.setTime(dtA.getTime());
+    dt.setTime(dtA.getTime());
     expect(dt.getTime()).toEqual(dtA.getTime());
     expect(dt.toGMTString()).toEqual(dtA.toGMTString());
   });
@@ -94,7 +94,7 @@ describe('timezoneJS.Date', function () {
     var dtA = new Date()
       , dt = new timezoneJS.Date();
 
-    dtA.setTime(dtA.getTime());
+    dt.setTime(dtA.getTime());
     expect(dt.getTime()).toEqual(dtA.getTime());
     expect(dt.toJSON()).toEqual(dtA.toJSON());
   });
@@ -116,17 +116,19 @@ describe('timezoneJS.Date', function () {
   });
 
   it('should take in millis and tz as constructor', function () {
-    var dtA = new Date(0)
+    var dtA = new Date(1342531863000)
       , dt = new timezoneJS.Date(dtA.getTime(), 'Asia/Bangkok');
 
-    expect(dt.getTime()).toEqual(-7 * 3600 * 1000);
+    expect(dt.getTime()).toEqual(1342531863000);
+    expect(dt.toString()).toEqual('2012-07-17 20:31:03');
   });
 
   it('should take in Date object as constructor', function () {
-    var dtA = new Date(0)
+    var dtA = new Date(1342531863000)
       , dt = new timezoneJS.Date(dtA, 'Asia/Bangkok');
 
-    expect(dt.getTime()).toEqual(-7 * 3600 * 1000);
+    expect(dt.getTime()).toEqual(1342531863000);
+    expect(dt.toString()).toEqual('2012-07-17 20:31:03');
   });
 
   it('should take in String and Asia/Bangkok as constructor', function () {
