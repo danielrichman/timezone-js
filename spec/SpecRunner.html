@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Jasmine Spec Runner</title>
+  <link rel="shortcut icon" type="image/png" href="../lib/jasmine-1.2.0/jasmine_favicon.png">
+  <link rel="stylesheet" type="text/css" href="../lib/jasmine-1.2.0/jasmine.css">
+
+  <script type="text/javascript" src="../lib/jasmine-1.2.0/jasmine.js"></script>
+  <script type="text/javascript" src="../lib/jasmine-1.2.0/jasmine-html.js"></script>
+
+  <script type="text/javascript">
+    // the specs and test utils assume node, so stub out require and the fs module
+    // fake_filesystem is defined in lib/tz_data.js, which is generated from
+    // python spec/fake_filesystem.py
+
+    if (typeof console === "undefined")
+      var console = {log: function(something) {} };
+
+    var fake_requires = {};
+    fake_requires.fs = {
+      readFile: function (url, encoding, callback) {
+        var f = this.readFileSync;
+        setTimeout(function () {
+          try {
+            callback(false, f(url, encoding));
+          }
+          catch (e) {
+            callback(e, null);
+          }
+        }, 3);
+      },
+      readFileSync: function (url, encoding) {
+        if (typeof fake_filesystem[url] !== "string")
+          throw "file not found";
+        return fake_filesystem[url];
+      }
+    }
+
+    window.require = function (what) {
+      return fake_requires[what];
+    }
+  </script>
+
+  <script type="text/javascript" src="../src/date.js"></script>
+
+  <script type="text/javascript" src="../lib/tz_data.js"></script>
+  <script type="text/javascript" src="test-utils.js"></script>
+
+  <script type="text/javascript">
+    fake_requires["../src/date"] = window.timezoneJS;
+    fake_requires["./test-utils"] = window.TestUtils;
+  </script>
+
+  <script type="text/javascript" src="date.spec.js"></script>
+  <script type="text/javascript" src="tz.async.spec.js"></script>
+  <script type="text/javascript" src="tz.preload.spec.js"></script>
+  <script type="text/javascript" src="tz.sync.spec.js"></script>
+
+  <script type="text/javascript">
+    (function() {
+      var jasmineEnv = jasmine.getEnv();
+      jasmineEnv.updateInterval = 1000;
+
+      var htmlReporter = new jasmine.HtmlReporter();
+
+      jasmineEnv.addReporter(htmlReporter);
+
+      jasmineEnv.specFilter = function(spec) {
+        return htmlReporter.specFilter(spec);
+      };
+
+      var currentWindowOnload = window.onload;
+
+      window.onload = function() {
+        if (currentWindowOnload) {
+          currentWindowOnload();
+        }
+        execJasmine();
+      };
+
+      function execJasmine() {
+        jasmineEnv.execute();
+      }
+
+    })();
+  </script>
+</head>
+
+<body>
+</body>
+</html>
