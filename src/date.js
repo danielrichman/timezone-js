@@ -166,7 +166,8 @@
     if (Object.prototype.toString.call(args[0]) === '[object Array]') {
       args = args[0];
     }
-    if (typeof args[args.length - 1] === 'string' && /^[a-zA-Z]+\//gi.test(args[args.length - 1])) {
+
+    if (typeof args[args.length - 1] === 'string' && /^[a-zA-Z]+\//.test(args[args.length - 1])) {
       tz = args.pop();
     }
 
@@ -211,7 +212,6 @@
         }
 
         dt = new Date(args[0]);
-        // todo: maybe test isNaN(dt.getTime()) or dt.toString() == "Invalid Date"
 
       } else if ((typeof args[0]) == "object" && (typeof args[0].getTime == "function")) {
         // Another Date/timezoneJS.Date object.
@@ -231,6 +231,9 @@
       }
       dt = new Date(arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], arr[6]);
     }
+
+    if (isNaN(dt.getTime()))
+      throw "failed to create Date object from arguments (Invalid Date)";
 
     if (mode == "copy_instant") {
       // Copy the instant in time from now, or another Date object.
