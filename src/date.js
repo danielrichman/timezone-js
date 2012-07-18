@@ -388,6 +388,19 @@
     toLocaleTimeString: function () {},
     toSource: function () {},
     toISOString: function () { return this.toString('yyyy-MM-ddTHH:mm:ss.SSS', 'Etc/UTC') + 'Z'; },
+    toRFC3339String: function () {
+      var offset = this.getTimezoneOffset();
+      var offset_sign = (offset > 0 ? '-' : '+');
+      offset = Math.abs(offset);
+      var offset_minutes = offset % 60
+        , offset_hours = Math.floor(offset / 60);
+      var offset_text = offset_sign + _fixWidth(offset_hours, 2) + ":" + _fixWidth(offset_minutes, 2);
+      if (this.milliseconds) {
+        return this.toString('yyyy-MM-ddTHH:mm:ss.SSS') + offset_text;
+      } else {
+        return this.toString('yyyy-MM-ddTHH:mm:ss') + offset_text;
+      }
+    },
     toJSON: function () { return this.toISOString(); },
     // Allows different format following ISO8601 format:
     toString: function (format, tz) {

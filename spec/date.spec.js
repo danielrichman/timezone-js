@@ -179,7 +179,17 @@
       expect(dtC.getUTCHours()).toEqual(15);
       expect(dtD.getUTCHours()).toEqual(1);
     });
-  
+ 
+    it('should format 2012-07-18T14:29:20+01:30 correctly in America/Los_Angeles RFC3339', function () {
+      var dt = new timezoneJS.Date("2012-07-18T14:29:20+01:30", "America/Los_Angeles");
+      expect(dt.toRFC3339String()).toEqual("2012-07-18T05:59:20-07:00");
+    });
+
+    it('should format 2011-11-21 03:18:40 (Europe/Paris) in RFC3339 correctly', function () {
+      var dt = new timezoneJS.Date(1321841920152, "Europe/Paris");
+      expect(dt.toRFC3339String()).toEqual("2011-11-21T03:18:40.152+01:00");
+    });
+
     it('should be able to set hours', function () {
       var dtA = new Date(0)
         , dt = new timezoneJS.Date(0, 'Etc/UTC');
