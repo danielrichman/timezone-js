@@ -81,6 +81,61 @@
     }
   }
 
+  // Provide an ISO8601/RFC3339 parser for browsers that don't support it
+  timezoneJS.parseISO = function (timestring) {
+    var pat = '^(?:([+-]?[0-9]{4,})(?:-([0-9]{2})(?:-([0-9]{2}))?)?)?' +
+      '(?:T(?:([0-9]{2})(?::([0-9]{2})(?::([0-9]{2})(?:\\.' +
+      '([0-9]{3}))?)?)?)?(Z|[-+][0-9]{2}:[0-9]{2})?)?$';
+    var match = timestring.match(pat);
+    if (match) {
+      var parts = {
+        year: match[1] || 0,
+        month:  match[2] || 1,
+        day:  match[3] || 1,
+        hour:  match[4] || 0,
+        minute:  match[5] || 0,
+        second:  match[6] || 0,
+        milli:  match[7] || 0,
+        offset:  match[8] || "Z"
+      };
+
+      var utcDate = Date.UTC(parts.year, parts.month-1, parts.day,
+        parts.hour, parts.minute, parts.second, parts.milli);
+
+      if (parts.offset !== "Z") {
+        match = parts.offset.match('([-+][0-9]{2})(?::([0-9]{2}))?');
+        if (!match) {
+          return NaN;
+        }
+        var offset = match[1]*60*60*1000+(match[2] || 0)*60*1000;
+        utcDate -= offset;
+      }
+      return new Date(utcDate);
+    }
+    return null;
+  };
+
+  var _use_ISO_parser = false;
+  try {
+    // Check support, enable parseISO if this doesn't work.
+    if ((new Date("2012-07-18T14:29:20+01:30")).getTime() !== 1342616360000)
+      throw "fail";
+  } catch (e) {
+    _use_ISO_parser = true;
+    if (typeof console !== "undefined")
+      console.log("Using replacement ISO parser");
+  }
+
+  // A quick as possible method to determine if a string, provided it is
+  // a date that new Date(str) can parse, is an ISO string.
+  var _isISOString = function (str) {
+    if (typeof str !== "string")
+        return false;
+    // If the string contains a T, and no spaces (so it couldn't belong to " GMT")
+    // then it must be an ISO8601/RFC3339 string
+    return (str.indexOf(" ") == -1 && str.indexOf("T") > 0);
+  };
+
   // Format a number to the length = digits. For ex:
   //
   // `_fixWidth(2, 2) = '02'`
@@ -128,8 +183,8 @@
     ? fleegix.xhr.send({
       url : opts.url,
       method : 'get',
-      handleSuccess : opts.success,
-      handleErr : opts.error
+      success : opts.success,
+      error : opts.error
     })
     : $.ajax({
       url : opts.url,
@@ -195,12 +250,22 @@
         mode = "copy_instant";
         dt = new Date(args[0]);
 
-      } else if ((typeof args[0]) == "string") {
-        // Could be a RFC2822 or ISO8601/RFC3339 string, with offset, which therefore represents an instant in time.
-        // Alternatively might be some abomination based on a bits of RFC2822 with parts missing, etc.
-        // Have to guess.
+      } else if (_isISOString(args[0])) {
+        // If the offset is ommitted from an ISO8601/RFC3339 string, it is taken to be UTC.
+        mode = "copy_instant";
 
-        // remove comments and excess whitespace (RFC2822 only)
+        if (_use_ISO_parser) {
+          dt = timezoneJS.parseISO(args[0]);
+        } else {
+          dt = new Date(args[0]);
+        }
+
+      } else if ((typeof args[0]) == "string") {
+        // Could be an RFC2822 string with offset, which therefore represents an instant in time, or
+        // alternatively might be some abomination based on a bits of RFC2822 with parts missing, etc.
+        // Have to guess:
+
+        // remove comments and excess whitespace
         var cleaned = args[0].replace(/\([^\(\)\/]+\)/g, '').replace(/\s+/g, ' ').replace(/^ /g, '').replace(/ $/, '');
 
         // if "GMT" "EST" etc. present, must be an offset.
@@ -232,7 +297,7 @@
       dt = new Date(arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], arr[6]);
     }
 
-    if (isNaN(dt.getTime()))
+    if (dt === null || isNaN(dt.getTime()))
       throw "failed to create Date object from arguments (Invalid Date)";
 
     if (mode == "copy_instant") {
@@ -326,7 +391,6 @@
     toJSON: function () { return this.toISOString(); },
     // Allows different format following ISO8601 format:
     toString: function (format, tz) {
-      // Default format is the same as toISOString
       if (!format) return this.toString('yyyy-MM-dd HH:mm:ss');
       var result = format;
       var tzInfo = tz ? timezoneJS.timezone.getTzInfo(new Date(this.getTime()), tz) : this.getTimezoneInfo();
